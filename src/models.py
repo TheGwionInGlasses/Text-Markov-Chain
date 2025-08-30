@@ -127,3 +127,27 @@ class Sequence:
         Return the number of vowel-consonant transitions found
         """
         return self.text_data.vc_transitions
+class MarkovChain:
+    """
+    This class is the logical implementation of a Markov chain
+    """
+    def text_sequence_to_markov(self, sequence : Sequence):
+        """
+        Load a given sequence into the Markov chain
+        """
+        return NotImplementedError
+    def current_state(self):
+        """
+        Return the current state of the Markov chain
+        """
+        return NotImplementedError
+    def current_state_transitions(self):
+        """
+        Return a list of the transition probabilities from the current state
+        """
+        return NotImplementedError    
+    def execute_transition(self):
+        """
+        Execute one transition
+        """
+        return NotImplementedError
