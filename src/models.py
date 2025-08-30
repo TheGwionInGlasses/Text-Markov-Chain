@@ -3,6 +3,7 @@ Model definitions
 """
 from dataclasses import dataclass
 import re
+import random
 
 vowel_or_consonant = {
     "a" : "V",
@@ -43,6 +44,13 @@ class TextData:
     cv_transitions: int
     vv_transitions: int
     vc_transitions: int
+@dataclass
+class MarkovNode:
+    """
+    For representing a state in a Markov chain
+    """
+    state_name: str
+    transitions: list
 class FileReader:
     """
     A FileReader. Contains the method for reading in a file.
@@ -107,6 +115,14 @@ class Sequence:
         Return the number of vowels found
         """
         return self.text_data.num_vowels
+    def get_total_num_transitions(self):
+        """
+        Return the sum of all transitions in the text.
+        """
+        return (self.text_data.cc_transitions +
+                self.text_data.cv_transitions +
+                self.text_data.vv_transitions +
+                self.text_data.vc_transitions)
     def get_num_concon_transition(self):
         """
         Return the number of consonant-consonant transitions found
@@ -124,30 +140,93 @@ class Sequence:
         return self.text_data.vv_transitions
     def get_num_vowcon_transition(self):
         """
-        Return the number of vowel-consonant transitions found
+        Return the number of vowel-consonant transitions found.
         """
         return self.text_data.vc_transitions
+    def get_concon_transition_prob(self):
+        """
+        The probability of C|C
+        """
+        return ((self.text_data.cc_transitions/self.get_total_num_transitions()) /
+                (self.text_data.cc_transitions/self.get_total_num_transitions() +
+                 self.text_data.cv_transitions/self.get_total_num_transitions()))
+    def get_convow_transition_prob(self):
+        """
+        The probability of C|V
+        """
+        return 1-self.get_concon_transition_prob()
+    def get_vowvow_transition_prob(self):
+        """
+        The probability of V|V
+        """
+        return ((self.text_data.vv_transitions/self.get_total_num_transitions()) /
+                (self.text_data.vv_transitions/self.get_total_num_transitions() +
+                 self.text_data.vc_transitions/self.get_total_num_transitions()))
+    def get_vowcon_transition_prob(self):
+        """
+        The probability of V|C
+        """
+        return 1-self.get_vowvow_transition_prob()
+    def get_transition_matrix(self):
+        """
+        Create a transition matrix from the text data.
+        """
+        x, z = 2, 2
+        matrix = [[0.0 for i in range(x)] for j in range(z)]
+        matrix[0][0] = self.get_vowvow_transition_prob()
+        matrix[0][1] = self.get_vowcon_transition_prob()
+        matrix[1][1] = self.get_convow_transition_prob()
+        matrix[1][0] = self.get_concon_transition_prob()
+        return matrix
 class MarkovChain:
     """
     This class is the logical implementation of a Markov chain
     """
+    def __init__(self):
+        self.current_node = MarkovNode('Placeholder', [])
+        self.chain = []
     def text_sequence_to_markov(self, sequence : Sequence):
         """
         Load a given sequence into the Markov chain
         """
-        return NotImplementedError
+        vowel_node = MarkovNode('V', [])
+        consonant_node = MarkovNode('C', [])
+        vowel_node.transitions.append([sequence.get_vowvow_transition_prob(), vowel_node])
+        vowel_node.transitions.append([sequence.get_vowcon_transition_prob(), consonant_node])
+        consonant_node.transitions.append([sequence.get_concon_transition_prob(), consonant_node])
+        consonant_node.transitions.append([sequence.get_convow_transition_prob(), vowel_node])
+        self.current_node = vowel_node
+        self.chain.append(self.current_node.state_name)
     def current_state(self):
         """
         Return the current state of the Markov chain
         """
-        return NotImplementedError
+        return self.current_node.state_name
     def current_state_transitions(self):
         """
         Return a list of the transition probabilities from the current state
         """
-        return NotImplementedError    
+        transitions = [x[0] for x in self.current_node.transitions]
+        return transitions
     def execute_transition(self):
         """
         Execute one transition
         """
-        return NotImplementedError
+        roll = random.random()
+        for transition in self.current_node.transitions:
+            roll -= transition[0]
+            if roll < 0:
+                self.current_node = transition[1]
+                self.chain.append(self.current_node.state_name)
+                return
+    def get_length(self):
+        """
+        Get the length of Markov chain. Should be equivelant to n-1 where n is the number of 
+        executions
+        """
+        return len(self.chain)
+    def get_chain(self):
+        """
+        Return the Markov chain, a timeseries of states over the course of the execution
+        """
+        return self.chain
