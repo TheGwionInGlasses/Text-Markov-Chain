@@ -2,6 +2,7 @@
 Tests
 """
 
+import re
 import pytest
 from src.models import FileReader, MarkovChain
 
@@ -50,5 +51,14 @@ def test_markov_chain_initialse(markov):
     Test that the sequence correctly loaded
     """
     test_transitions = [(5/57)/(5/57 + 18/57), (18/57)/(5/57 + 18/57)]
-    assert markov.current_state == 'V'
+    assert markov.current_state() == 'V'
     assert markov.current_state_transitions() == test_transitions
+
+def test_markov_chain_execution(markov):
+    """
+    Test one execution of the markov chain
+    """
+    markov_chain = markov
+    markov_chain.execute_transition()
+    str_chain = ''.join(markov_chain.get_chain())
+    assert re.match(r"VC|VV", str_chain)
