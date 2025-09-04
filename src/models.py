@@ -178,6 +178,16 @@ class Sequence:
         matrix[1][1] = self.get_convow_transition_prob()
         matrix[1][0] = self.get_concon_transition_prob()
         return matrix
+    def get_expected_distribution(self):
+        """
+        This function returns a list of the expected distribution of vowels and consonants
+        """
+        distributions = []
+        distribution_of_vowels = self.get_num_vowels() / self.get_num_alphabet_chars()
+        distribution_of_consonants = 1-distribution_of_vowels
+        distributions.append(['V', distribution_of_vowels])
+        distributions.append(['C', distribution_of_consonants])
+        return distributions
 class MarkovChain:
     """
     This class is the logical implementation of a Markov chain
@@ -230,3 +240,15 @@ class MarkovChain:
         Return the Markov chain, a timeseries of states over the course of the execution
         """
         return self.chain
+    def get_distribution_text(self):
+        """
+        Return the current probability distribution
+        """
+        num_of_vowels = self.chain.count('V')
+        num_of_chars = self.get_length()
+        distributions = []
+        distribution_of_vowels = num_of_vowels/num_of_chars
+        distribution_of_consonants = 1-distribution_of_vowels
+        distributions.append(['V', distribution_of_vowels])
+        distributions.append(['C', distribution_of_consonants])
+        return distributions
