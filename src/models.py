@@ -73,7 +73,7 @@ class FileReader:
         """
         if self.text:
             return Sequence(self.text)
-        return ""
+        return Sequence("")
 class Sequence:
     """
     The data processor for TextData Class.
@@ -240,7 +240,7 @@ class MarkovChain:
         Return the Markov chain, a timeseries of states over the course of the execution
         """
         return self.chain
-    def get_distribution_text(self):
+    def get_distribution(self):
         """
         Return the current probability distribution
         """
